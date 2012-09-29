@@ -13,10 +13,30 @@
   <name>ant-interceptor</name>
   <url>http://jenkins-ci.org/</url>
 
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>attached</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <descriptorId>jar-with-dependencies</descriptorId>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
     <dependency>
       <groupId>org.jenkins-ci.main</groupId>
       <artifactId>remoting</artifactId>
+      <!-- TODO: should be 'provided' scope -->
       <version>2.9</version>
     </dependency>
     <dependency>
