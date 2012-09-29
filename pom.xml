@@ -13,6 +13,12 @@
   <name>ant-interceptor</name>
   <url>http://jenkins-ci.org/</url>
 
+  <scm>
+    <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/jenkinsci/${project.artifactId}.git</developerConnection>
+    <url>https://github.com/jenkinsci/${project.artifactId}</url>
+  </scm>
+
   <build>
     <plugins>
       <plugin>
@@ -49,7 +55,7 @@
     <dependency>
       <groupId>org.jenkins-ci</groupId>
       <artifactId>ant-spy</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.0</version>
     </dependency>
     <dependency>
       <groupId>org.kohsuke.metainf-services</groupId>
