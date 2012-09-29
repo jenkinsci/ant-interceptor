@@ -35,20 +35,20 @@ public class AntInterceptor extends AntListener {
     private final List<AntListener> delegates = new ArrayList<AntListener>();
 
     public AntInterceptor() throws Exception {
-
-        String port = System.getenv(JENKINS_ANT_PORT);
-        if (port==null) {
-            System.err.println("Can't talk to Jenkins because JENKINS_ANT_PORT environment variable is missing. Did you unset this?");
+        String connect = System.getenv(JENKINS_ANT_CONNECTOR);
+        if (connect==null) {
+            System.err.println("Can't talk to Jenkins because "+ JENKINS_ANT_CONNECTOR +" environment variable is missing. Did you unset this?");
             return;
         }
 
-        String secret = System.getenv(JENKINS_ANT_SECRET);
-        if (secret==null) {
-            System.err.println("Can't talk to Jenkins because JENKINS_ANT_SECRET environment variable is missing. Did you unset this?");
+        String[] tokens = connect.split("\\|");
+        if (tokens==null || tokens.length<2) {
+            // allow more tokens for future extension
+            System.err.println("Can't talk to Jenkins because "+ JENKINS_ANT_CONNECTOR +" environment variable is malformed: "+connect);
             return;
         }
 
-        SecretKey symKey = new SecretKeySpec(readFileToByteArray(new File(secret)),"AES");
+        SecretKey symKey = new SecretKeySpec(readFileToByteArray(new File(tokens[1])),"AES");
 
         StreamCipherFactory cipher = new StreamCipherFactory(symKey);
 
@@ -62,7 +62,7 @@ public class AntInterceptor extends AntListener {
             }
         });
 
-        Socket s = new Socket((String)null, Integer.parseInt(port));
+        Socket s = new Socket((String)null, Integer.parseInt(tokens[0]));
         CHANNEL = new Channel("channel", pool, Mode.BINARY,
                 new BufferedInputStream(cipher.wrap(new SocketInputStream(s))),
                 new BufferedOutputStream(cipher.wrap(new SocketOutputStream(s))));
@@ -130,8 +130,7 @@ public class AntInterceptor extends AntListener {
 
     public static final ChannelProperty<List<AntListener>> LISTENERS = new ChannelProperty<List<AntListener>>((Class)List.class,"AntListeners");
 
-    public static final String JENKINS_ANT_PORT = "JENKINS_ANT_PORT";
-    public static final String JENKINS_ANT_SECRET = "JENKINS_ANT_SECRET";
+    public static final String JENKINS_ANT_CONNECTOR = "JENKINS_ANT_CONNECTOR";
 
     /**
      * Once the channel is established, it'll be kept here.
