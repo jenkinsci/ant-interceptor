@@ -20,6 +20,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -67,7 +68,7 @@ public class AntInterceptor extends AntListener {
                 new BufferedInputStream(cipher.wrap(new SocketInputStream(s))),
                 new BufferedOutputStream(cipher.wrap(new SocketOutputStream(s))));
 
-        delegates.addAll(CHANNEL.getRemoteProperty(LISTENERS));
+        delegates.addAll((Collection<AntListener>)CHANNEL.getRemoteProperty(LISTENERS_KEY));
     }
 
     private byte[] readFileToByteArray(File f) throws IOException {
@@ -128,7 +129,7 @@ public class AntInterceptor extends AntListener {
             l.messageLogged(event);
     }
 
-    public static final ChannelProperty<List<AntListener>> LISTENERS = new ChannelProperty<List<AntListener>>((Class)List.class,"AntListeners");
+    public static final String LISTENERS_KEY = "AntListeners";
 
     public static final String JENKINS_ANT_CONNECTOR = "JENKINS_ANT_CONNECTOR";
 
