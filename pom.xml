@@ -7,7 +7,7 @@
   </parent>
 
   <artifactId>ant-interceptor</artifactId>
-  <version>1.0</version>
+  <version>1.1-SNAPSHOT</version>
 
   <name>ant-interceptor</name>
   <url>http://jenkins-ci.org/</url>
