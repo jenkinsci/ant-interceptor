@@ -10,9 +10,6 @@ import org.jenkinsci.ant.AntListener;
 import org.kohsuke.MetaInfServices;
 
 import javax.annotation.Nonnull;
-import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.BufferedInputStream;
@@ -39,13 +36,13 @@ public class AntInterceptor extends AntListener {
 
     public AntInterceptor() throws Exception {
 
-        String port = System.getenv("JENKINS_ANT_PORT");
+        String port = System.getenv(JENKINS_ANT_PORT);
         if (port==null) {
             System.err.println("Can't talk to Jenkins because JENKINS_ANT_PORT environment variable is missing. Did you unset this?");
             return;
         }
 
-        String secret = System.getenv("JENKINS_ANT_SECRET");
+        String secret = System.getenv(JENKINS_ANT_SECRET);
         if (secret==null) {
             System.err.println("Can't talk to Jenkins because JENKINS_ANT_SECRET environment variable is missing. Did you unset this?");
             return;
@@ -53,11 +50,7 @@ public class AntInterceptor extends AntListener {
 
         SecretKey symKey = new SecretKeySpec(readFileToByteArray(new File(secret)),"AES");
 
-        Cipher decrypt = Cipher.getInstance("AES/CBC");
-        decrypt.init(Cipher.DECRYPT_MODE, symKey);
-
-        Cipher encrypt = Cipher.getInstance("AES/CBC");
-        encrypt.init(Cipher.ENCRYPT_MODE, symKey);
+        StreamCipherFactory cipher = new StreamCipherFactory(symKey);
 
         ExecutorService pool = Executors.newCachedThreadPool(new ThreadFactory() {
             private int iota=1;
@@ -71,8 +64,8 @@ public class AntInterceptor extends AntListener {
 
         Socket s = new Socket((String)null, Integer.parseInt(port));
         CHANNEL = new Channel("channel", pool, Mode.BINARY,
-                new BufferedInputStream(new CipherInputStream(new SocketInputStream(s),decrypt)),
-                new BufferedOutputStream(new CipherOutputStream(new SocketOutputStream(s),encrypt)));
+                new BufferedInputStream(cipher.wrap(new SocketInputStream(s))),
+                new BufferedOutputStream(cipher.wrap(new SocketOutputStream(s))));
 
         delegates.addAll(CHANNEL.getRemoteProperty(LISTENERS));
     }
@@ -135,11 +128,15 @@ public class AntInterceptor extends AntListener {
             l.messageLogged(event);
     }
 
-    public final ChannelProperty<List<AntListener>> LISTENERS = new ChannelProperty<List<AntListener>>((Class)List.class,"AntListeners");
+    public static final ChannelProperty<List<AntListener>> LISTENERS = new ChannelProperty<List<AntListener>>((Class)List.class,"AntListeners");
+
+    public static final String JENKINS_ANT_PORT = "JENKINS_ANT_PORT";
+    public static final String JENKINS_ANT_SECRET = "JENKINS_ANT_SECRET";
 
     /**
      * Once the channel is established, it'll be kept here.
      * We only support one connection per VM.
      */
     private static Channel CHANNEL;
+
 }
